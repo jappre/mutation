@@ -1,1 +1,1 @@
-callback = (message) => @voicemail.push message
+callback = (name) -> @name = name
