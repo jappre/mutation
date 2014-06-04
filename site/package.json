@@ -1,0 +1,40 @@
+{
+  "name": "site",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@code.gezbox.com:mr-wind/site.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bower": "~1.2.8",
+    "coffee-script": "~1.7.1",
+    "coffeegulp": "0.0.4",
+    "css-whitespace": "~1.1.0",
+    "glob": "~3.2.8",
+    "gulp": "~3.5.2",
+    "gulp-coffee": "~1.4.1",
+    "gulp-jade": "~0.4.2",
+    "gulp-rename": "~1.1.0",
+    "gulp-replace": "~0.2.0",
+    "gulp-util": "~2.2.14",
+    "js-yaml": "~3.0.1",
+    "lodash": "~2.4.1",
+    "marked": "~0.3.1",
+    "q": "~1.0.0",
+    "rework": "~0.20.2",
+    "rework-calc": "~0.2.1",
+    "rework-clearfix": "git://github.com/fgnass/rework-clearfix",
+    "rework-imagesize": "git://github.com/simme/rework-imagesize",
+    "rework-importer": "git://github.com/simme/rework-importer",
+    "rework-shade": "^1.4.3",
+    "rework-vars": "^2.0.3",
+    "through2": "~0.4.1"
+  }
+}

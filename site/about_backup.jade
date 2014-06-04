@@ -1,0 +1,28 @@
+include _components
+
+doctype html
+html
+  head
+    include _head
+    title 风先生即刻送 - 关于我们
+    link(rel="stylesheet", type="text/css", href="styles/about.css", media="all")
+
+  body
+    +navbar('about')
+
+    .content
+      .container
+        h2: != about[0].name
+        .intro: != about[0].content
+
+        img(src='images/about/mrwind.png')
+
+        h2: != about[1].name
+        .intro: != about[1].content
+        each _, i in new Array(6)
+          img(src='images/about/photo_#{i + 1}.jpg')
+
+    +footer('about')
+
+    //include _foot
+
