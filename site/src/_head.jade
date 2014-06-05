@@ -1,0 +1,25 @@
+
+meta(charset="UTF-8")
+meta(name="viewport" content="width=960")
+meta(name="keywords", content="风先生即刻送,网上点餐外卖,杭州外卖网,杭州外卖电话,短距离配送,点我吧,送货服务,格子箱,同城快递")
+meta(name="description", content="风先生即刻送是一家新兴的同城快递科技公司，基于移动应用，为顾客提供本地化的代购以及送货服务。")
+link(type="text/css" rel="stylesheet" href="http://cdn.staticfile.org/normalize/3.0.0/normalize.min.css")
+link(rel="stylesheet", type="text/css", href="styles/base.css", media="all")
+
+script(type="text/javascript" src="http://cdn.staticfile.org/platform/1.0.0/platform.min.js")
+script
+  :coffee
+    if /^(iOS|Android)/.test platform.os
+      window.location = 'http://m.123feng.com/'
+
+<!--[if lte IE 8]>
+//- script(type="text/javascript" src="//cdn.staticfile.org/css3pie/1.0.0/PIE.min.js")
+//- script(type="text/javascript" src="//cdn.staticfile.org/nwmatcher/1.2.5/nwmatcher.min.js")
+//- script(type="text/javascript" src="//cdn.staticfile.org/selectivizr/1.0.2/selectivizr-min.js")
+script(type="text/javascript" src="//cdn.staticfile.org/html5shiv/3.7/html5shiv-printshiv.min.js")
+script(type="text/javascript" src="//cdn.staticfile.org/html5shiv/3.7/html5shiv.min.js")
+script(type="text/javascript" src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE8.js").
+  IE7_PNG_SUFFIX="-trans.png";
+script(type="text/javascript").
+  document.getElementsByTagName('html')[0].setAttribute('class', 'lte-ie8')
+<![endif]-->

@@ -1,1 +1,49 @@
-#it`s beginning
+//#it`s beginning
+include _components
+
+doctype html
+html
+  head
+    include _head
+    title 风先生即刻送 - 短距离/超快/配送服务
+    link(rel="stylesheet", type="text/css", href="styles/index.css", media="all")
+
+  body
+    +navbar('index')
+
+    section.deliver
+      .container
+        h2.red_title 风先生即刻送
+          span 短距离&nbsp;&#8226;&nbsp;超快&nbsp;&#8226;&nbsp;配送服务
+        p
+          | 平台聚集了大量优质配送员，帮助商家解决配送难题
+          br
+          | 通过管理一支弹性的配送队伍，在全国范围内开放配送力量
+    section.service
+      .container
+        ul
+          li.shop
+            dl
+              dt.red_title 品牌商服务
+              dt 为商户提供专业配送
+          li.api
+            dl
+              dt.red_title 开放API
+              dt 为合作伙伴提供配送力量
+          li.ser
+            dl
+              dt.red_title 大量优质配送人员
+              dt 为城市提供五星级送达服务
+
+    section.feature.city
+      .container
+        h2 城市启动倒计时
+
+    section.feature.api
+      .container
+        h2.red_title 为国内领先的点餐平台开放配送力量
+        h2 通过对接API调用全国的风先生，快速拓展市场
+
+    +footer('index')
+
+    //include _foot

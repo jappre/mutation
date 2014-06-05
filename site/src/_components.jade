@@ -1,0 +1,35 @@
+
+mixin navbar(pagename)
+  header.navbar.top
+    .container
+      .brand
+        a(href="http://123feng.com") 风先生 - 短距离/超快/配送服务
+
+      ul.links
+        each item in ['index-首页', 'order-下单配送', 'api-API', 'deliver-成为风先生', 'news-新闻', 'about-关于']
+          li
+            - itemParts = item.split('-')
+            a(class=pagename === itemParts[0] ? 'active' : '', href="#{itemParts[0]}.html")= itemParts[1]
+
+mixin footer(pagename)
+  footer.footer
+    .container
+      ul.contacts
+        li.tel
+          dl
+            dt 联系电话
+            dd: a(href="tel:0571-83737967") 0571-83737967
+        li.email
+          dl
+            dt 合作邮箱
+            dd: a(href="mailto: hezuo@123feng.com") hezuo@123feng.com
+        li.wechat
+          dl
+            dt 微信
+            dd: a(href="") 906123123
+
+    p.copyright &copy; 2014 Gezbox, Inc.
+
+mixin copyright
+  footer.copyright_footer
+    p.copyright &copy; 2014 Gezbox, Inc.
