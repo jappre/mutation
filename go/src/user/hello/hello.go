@@ -1,10 +1,10 @@
 package main
 
 import (
-    "fmt"
-    "user/newmath"
+	"fmt"
+	"user/newmath"
 )
 
 func main() {
-    fmt.Printf("hello, world. Sqrt(2) = %v\n:", newmath.Sqrt(2))
+	fmt.Printf("hello, world. Sqrt(2) = %v\n:", newmath.Sqrt(2))
 }

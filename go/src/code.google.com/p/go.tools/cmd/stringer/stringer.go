@@ -29,7 +29,7 @@
 //
 // running this command
 //
-//	go tool stringer -type=Pill
+//	stringer -type=Pill
 //
 // in the same directory will create the file pill_string.go, in package painkiller,
 // containing a definition of
@@ -42,8 +42,7 @@
 //
 // Typically this process would be run using go generate, like this:
 //
-//	//go:generate go tool stringer -type=Pill
-//	TODO: do we install this as a tool or as a binary?
+//	//go:generate stringer -type=Pill
 //
 // If multiple constants have the same value, the lexically first matching name will
 // be used (in the example, Acetaminophen will print as "Paracetamol").
@@ -103,11 +102,11 @@ func main() {
 	log.SetPrefix("stringer: ")
 	flag.Usage = Usage
 	flag.Parse()
-	types := strings.Split(*typeNames, ",")
-	if len(types) == 0 {
+	if len(*typeNames) == 0 {
 		flag.Usage()
 		os.Exit(2)
 	}
+	types := strings.Split(*typeNames, ",")
 
 	// We accept either one directory or a list of files. Which do we have?
 	args := flag.Args()
@@ -610,11 +609,12 @@ func (g *Generator) buildMultipleRuns(runs [][]Value, typeName string) {
 			g.Printf("\t\treturn _%s_name_%d\n", typeName, i)
 			continue
 		}
-		g.Printf("\tcase %s <= i && i < %s:\n", &values[0], &values[len(values)-1])
+		g.Printf("\tcase %s <= i && i <= %s:\n", &values[0], &values[len(values)-1])
+		if values[0].value != 0 {
+			g.Printf("\t\ti -= %s\n", &values[0])
+		}
 		g.Printf("\t\tlo := uint%d(0)\n", usize(len(values)))
-		g.Printf("\t\tif i > %s {\n", &values[0])
-		g.Printf("\t\t\ti -= %s\n", &values[0])
-		g.Printf("\t\t} else {\n")
+		g.Printf("\t\tif i > 0 {\n")
 		g.Printf("\t\t\tlo = _%s_index_%d[i-1]\n", typeName, i)
 		g.Printf("\t\t}\n")
 		g.Printf("\t\treturn _%s_name_%d[lo:_%s_index_%d[i]]\n", typeName, i, typeName, i)
