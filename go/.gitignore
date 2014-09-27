@@ -2,3 +2,5 @@
 node_modules
 pkg
 bin
+.DS_Store
+
