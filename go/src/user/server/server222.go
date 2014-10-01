@@ -37,5 +37,5 @@ func main() {
 		return "我©, GONE!"
 	})
 
-	// m.Run()
+	m.Run()
 }
