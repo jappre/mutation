@@ -588,6 +588,39 @@ func TestInitOrderInfo(t *testing.T) {
 	}
 }
 
+func TestMultiFileInitOrder(t *testing.T) {
+	fset := token.NewFileSet()
+	mustParse := func(src string) *ast.File {
+		f, err := parser.ParseFile(fset, "main", src, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return f
+	}
+
+	fileA := mustParse(`package main; var a = 1`)
+	fileB := mustParse(`package main; var b = 2`)
+
+	// The initialization order must not depend on the parse
+	// order of the files, only on the presentation order to
+	// the type-checker.
+	for _, test := range []struct {
+		files []*ast.File
+		want  string
+	}{
+		{[]*ast.File{fileA, fileB}, "[a = 1 b = 2]"},
+		{[]*ast.File{fileB, fileA}, "[b = 2 a = 1]"},
+	} {
+		var info Info
+		if _, err := new(Config).Check("main", fset, test.files, &info); err != nil {
+			t.Fatal(err)
+		}
+		if got := fmt.Sprint(info.InitOrder); got != test.want {
+			t.Fatalf("got %s; want %s", got, test.want)
+		}
+	}
+}
+
 func TestFiles(t *testing.T) {
 	var sources = []string{
 		"package p; type T struct{}; func (T) m1() {}",
@@ -719,12 +752,7 @@ func main() {
         _ = (*B).f
 }`
 
-	// TODO(adonovan): assert all map entries are used at least once.
 	wantOut := map[string][2]string{
-		"lib.T":   {"qualified ident type lib.T float64", ".[]"},
-		"lib.C":   {"qualified ident const lib.C lib.T", ".[]"},
-		"lib.F":   {"qualified ident func lib.F()", ".[]"},
-		"lib.V":   {"qualified ident var lib.V lib.T", ".[]"},
 		"lib.T.M": {"method expr (lib.T) M(lib.T)", ".[0]"},
 
 		"A{}.B":    {"field (main.A) B *main.B", ".[0]"},
@@ -775,6 +803,7 @@ func main() {
 		if want != got {
 			t.Errorf("%s: got %q; want %q", syntax, got, want)
 		}
+		delete(wantOut, syntax)
 
 		// We must explicitly assert properties of the
 		// Signature's receiver since it doesn't participate
@@ -789,6 +818,10 @@ func main() {
 		} else if sig != nil && sig.Recv() != nil {
 			t.Error("%s: signature has receiver %s", sig, sig.Recv().Type())
 		}
+	}
+	// Assert that all wantOut entries were used exactly once.
+	for syntax := range wantOut {
+		t.Errorf("no ast.Selection found with syntax %q", syntax)
 	}
 }
 
