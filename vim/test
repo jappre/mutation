@@ -3,3 +3,17 @@ Practical Vim , by Drew Neil
 :A¿Read Drew Neil`s
 
 210:h
+
+
+def fib(n):
+    a, b = 0, 1
+    while a < n:
+        print a:
+        a, b = b, a+b
+fin(42)
+
+
+<a href="">one</a>
+<a href="">one</a>
+<a href="">two</a>
+<a href="">three</a>
