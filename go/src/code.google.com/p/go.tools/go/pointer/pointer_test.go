@@ -21,13 +21,13 @@ import (
 	"strings"
 	"testing"
 
-	"code.google.com/p/go.tools/go/callgraph"
-	"code.google.com/p/go.tools/go/loader"
-	"code.google.com/p/go.tools/go/pointer"
-	"code.google.com/p/go.tools/go/ssa"
-	"code.google.com/p/go.tools/go/ssa/ssautil"
-	"code.google.com/p/go.tools/go/types"
-	"code.google.com/p/go.tools/go/types/typeutil"
+	"golang.org/x/tools/go/callgraph"
+	"golang.org/x/tools/go/loader"
+	"golang.org/x/tools/go/pointer"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/ssa/ssautil"
+	"golang.org/x/tools/go/types"
+	"golang.org/x/tools/go/types/typeutil"
 )
 
 var inputs = []string{
@@ -46,6 +46,7 @@ var inputs = []string{
 	"testdata/funcreflect.go",
 	"testdata/hello.go", // NB: causes spurious failure of HVN cross-check
 	"testdata/interfaces.go",
+	"testdata/issue9002.go",
 	"testdata/mapreflect.go",
 	"testdata/maps.go",
 	"testdata/panic.go",
@@ -190,7 +191,8 @@ func doOneInput(input, filename string) bool {
 			for _, b := range fn.Blocks {
 				for _, instr := range b.Instrs {
 					if instr, ok := instr.(ssa.CallInstruction); ok {
-						if b, ok := instr.Common().Value.(*ssa.Builtin); ok && b.Name() == "print" {
+						call := instr.Common()
+						if b, ok := call.Value.(*ssa.Builtin); ok && b.Name() == "print" && len(call.Args) == 1 {
 							probes[instr.Common()] = true
 						}
 					}

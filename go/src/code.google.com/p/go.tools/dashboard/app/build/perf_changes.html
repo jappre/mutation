@@ -8,9 +8,9 @@
    <header id="topbar">   
     <h1>Go Dashboard</h1>
     <nav>
-      <a href="{{$.Dashboard.RelPath}}">Test</a>
-      <a href="{{$.Dashboard.RelPath}}perf">Perf</a>
-      <a href="{{$.Dashboard.RelPath}}perfgraph">Graphs</a>
+      <a href="{{$.Dashboard.Prefix}}/">Test</a>
+      <a href="{{$.Dashboard.Prefix}}/perf">Perf</a>
+      <a href="{{$.Dashboard.Prefix}}/perfgraph">Graphs</a>
     </nav>
     <div class="clear"></div>
   </header>
@@ -76,7 +76,8 @@
       <nav>
         <a {{if .HasPrev}}href="?page={{.Prev}}"{{else}}class="inactive"{{end}}>newer</a>
         <a {{if .Next}}href="?page={{.Next}}"{{else}}class="inactive"{{end}}>older</a>
-        <a {{if .HasPrev}}href="."{{else}}class="inactive"{{end}}>latest</a>
+        <a {{if .HasPrev}}href="?"{{else}}class="inactive"{{end}}>latest</a>
+        <a href="https://code.google.com/p/go-wiki/wiki/PerfDashboard">Help</a>
       </nav>
     </div>
     {{end}}

@@ -172,7 +172,7 @@ func addCommit(c appengine.Context, com *Commit) error {
 	}
 	// if this isn't the first Commit test the parent commit exists.
 	// The all zeros are returned by hg's p1node template for parentless commits.
-	if com.ParentHash != "" && com.ParentHash != "0000000000000000000000000000000000000000" {
+	if com.ParentHash != "" && com.ParentHash != "0000000000000000000000000000000000000000" && com.ParentHash != "0000" {
 		n, err := datastore.NewQuery("Commit").
 			Filter("Hash =", com.ParentHash).
 			Ancestor(p.Key(c)).
@@ -192,8 +192,8 @@ func addCommit(c appengine.Context, com *Commit) error {
 		}
 	}
 	// put the Commit
-	if _, err = datastore.Put(c, com.Key(c), com); err != nil {
-		return fmt.Errorf("putting Commit: %v", err)
+	if err = putCommit(c, com); err != nil {
+		return err
 	}
 	if com.NeedsBenchmarking {
 		// add to CommitRun
@@ -455,7 +455,7 @@ func buildPerfTodo(c appengine.Context, builder string) (*PerfTodo, error) {
 				nums = append(nums, num)
 			}
 		}
-		todo.CommitNums = orderPrefTodo(nums)
+		todo.CommitNums = orderPerfTodo(nums)
 		todo.CommitNums = append(todo.CommitNums, releaseNums...)
 		if _, err = datastore.Put(c, todo.Key(c), todo); err != nil {
 			return fmt.Errorf("putting PerfTodo: %v", err)
@@ -609,7 +609,8 @@ func perfResultHandler(r *http.Request) (interface{}, error) {
 }
 
 // addPerfResult creates PerfResult and updates Commit, PerfTodo,
-// PerfMetricRun and PerfConfig. Must be executed within a transaction.
+// PerfMetricRun and PerfConfig.
+// MUST be called from inside a transaction.
 func addPerfResult(c appengine.Context, r *http.Request, req *PerfRequest) error {
 	// check Package exists
 	p, err := GetPackage(c, "")
@@ -676,6 +677,7 @@ func addPerfResult(c appengine.Context, r *http.Request, req *PerfRequest) error
 	return nil
 }
 
+// MUST be called from inside a transaction.
 func checkPerfChanges(c appengine.Context, r *http.Request, com *Commit, builder string, res *PerfResult) error {
 	pc, err := GetPerfConfig(c, r)
 	if err != nil {
@@ -839,22 +841,20 @@ func keyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
-	for _, d := range dashboards {
-		// admin handlers
-		http.HandleFunc(d.RelPath+"init", initHandler)
-		http.HandleFunc(d.RelPath+"key", keyHandler)
+	// admin handlers
+	handleFunc("/init", initHandler)
+	handleFunc("/key", keyHandler)
 
-		// authenticated handlers
-		http.HandleFunc(d.RelPath+"commit", AuthHandler(commitHandler))
-		http.HandleFunc(d.RelPath+"packages", AuthHandler(packagesHandler))
-		http.HandleFunc(d.RelPath+"result", AuthHandler(resultHandler))
-		http.HandleFunc(d.RelPath+"perf-result", AuthHandler(perfResultHandler))
-		http.HandleFunc(d.RelPath+"tag", AuthHandler(tagHandler))
-		http.HandleFunc(d.RelPath+"todo", AuthHandler(todoHandler))
+	// authenticated handlers
+	handleFunc("/commit", AuthHandler(commitHandler))
+	handleFunc("/packages", AuthHandler(packagesHandler))
+	handleFunc("/result", AuthHandler(resultHandler))
+	handleFunc("/perf-result", AuthHandler(perfResultHandler))
+	handleFunc("/tag", AuthHandler(tagHandler))
+	handleFunc("/todo", AuthHandler(todoHandler))
 
-		// public handlers
-		http.HandleFunc(d.RelPath+"log/", logHandler)
-	}
+	// public handlers
+	handleFunc("/log/", logHandler)
 }
 
 func validHash(hash string) bool {

@@ -136,9 +136,9 @@ import (
 	"os"
 	"strings"
 
-	"code.google.com/p/go.tools/astutil"
-	"code.google.com/p/go.tools/go/gcimporter"
-	"code.google.com/p/go.tools/go/types"
+	"golang.org/x/tools/astutil"
+	"golang.org/x/tools/go/gcimporter"
+	"golang.org/x/tools/go/types"
 )
 
 // Config specifies the configuration for a program to load.
@@ -297,6 +297,7 @@ func (conf *Config) fset() *token.FileSet {
 // the Config's FileSet, which is initialized if nil.
 //
 func (conf *Config) ParseFile(filename string, src interface{}) (*ast.File, error) {
+	// TODO(adonovan): use conf.build() etc like parseFiles does.
 	return parser.ParseFile(conf.fset(), filename, src, conf.ParserMode)
 }
 
@@ -428,7 +429,7 @@ func (conf *Config) ImportWithTests(path string) error {
 	xtestFiles, errs := conf.parsePackageFiles(bp, 'x')
 	if len(errs) > 0 {
 		// TODO(adonovan): fix: parse errors in x_test.go files
-		// are still catastrophic to Load().
+		// cause FromArgs() to fail completely.
 		return errs[0] // I/O or parse error
 	}
 	if len(xtestFiles) > 0 {

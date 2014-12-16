@@ -36,11 +36,12 @@ const (
 // ignoreFailure is a set of builders that we don't email about because
 // they are not yet production-ready.
 var ignoreFailure = map[string]bool{
-	"dragonfly-386":           true,
-	"dragonfly-amd64":         true,
-	"netbsd-arm-rpi":          true,
-	"solaris-amd64-smartos":   true,
-	"solaris-amd64-solaris11": true,
+	"dragonfly-386":         true,
+	"dragonfly-amd64":       true,
+	"freebsd-arm":           true,
+	"netbsd-amd64-bsiegert": true,
+	"netbsd-arm-rpi":        true,
+	"plan9-amd64-aram":      true,
 }
 
 // notifyOnFailure checks whether the supplied Commit or the subsequent
@@ -200,8 +201,12 @@ var (
 	)
 )
 
+// MUST be called from inside a transaction.
 func sendPerfFailMail(c appengine.Context, builder string, res *PerfResult) error {
 	com := &Commit{Hash: res.CommitHash}
+	if err := datastore.Get(c, com.Key(c), com); err != nil {
+		return err
+	}
 	logHash := ""
 	parsed := res.ParseData()
 	for _, data := range parsed[builder] {
@@ -216,6 +221,8 @@ func sendPerfFailMail(c appengine.Context, builder string, res *PerfResult) erro
 	return commonNotify(c, com, builder, logHash)
 }
 
+// commonNotify MUST!!! be called from within a transaction inside which
+// the provided Commit entity was retrieved from the datastore.
 func commonNotify(c appengine.Context, com *Commit, builder, logHash string) error {
 	if com.Num == 0 || com.Desc == "" {
 		stk := make([]byte, 10000)
@@ -230,8 +237,7 @@ func commonNotify(c appengine.Context, com *Commit, builder, logHash string) err
 	c.Infof("%s is broken commit; notifying", com.Hash)
 	notifyLater.Call(c, com, builder, logHash) // add task to queue
 	com.FailNotificationSent = true
-	_, err := datastore.Put(c, com.Key(c), com)
-	return err
+	return putCommit(c, com)
 }
 
 // sendFailMail sends a mail notification that the build failed on the

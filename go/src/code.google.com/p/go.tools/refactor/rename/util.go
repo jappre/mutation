@@ -5,13 +5,15 @@
 package rename
 
 import (
+	"go/ast"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"unicode"
 
-	"code.google.com/p/go.tools/go/types"
+	"golang.org/x/tools/go/types"
 )
 
 func objectKind(obj types.Object) string {
@@ -75,12 +77,16 @@ func isDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9' || ch >= 0x80 && unicode.IsDigit(ch)
 }
 
-// -- Plundered from code.google.com/p/go.tools/oracle -----------------
+// -- Plundered from golang.org/x/tools/oracle -----------------
 
 // sameFile returns true if x and y have the same basename and denote
 // the same file.
 //
 func sameFile(x, y string) bool {
+	if runtime.GOOS == "windows" {
+		x = filepath.ToSlash(x)
+		y = filepath.ToSlash(y)
+	}
 	if x == y {
 		return true
 	}
@@ -92,4 +98,16 @@ func sameFile(x, y string) bool {
 		}
 	}
 	return false
+}
+
+// unparen returns e with any enclosing parentheses stripped.
+func unparen(e ast.Expr) ast.Expr {
+	for {
+		p, ok := e.(*ast.ParenExpr)
+		if !ok {
+			break
+		}
+		e = p.X
+	}
+	return e
 }

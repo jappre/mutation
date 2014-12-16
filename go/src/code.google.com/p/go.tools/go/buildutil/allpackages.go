@@ -4,11 +4,13 @@
 
 // Package buildutil provides utilities related to the go/build
 // package in the standard library.
+//
+// All I/O is done via the build.Context file system interface, which must
+// be concurrency-safe.
 package buildutil
 
 import (
 	"go/build"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -23,7 +25,7 @@ import (
 // The result may include import paths for directories that contain no
 // *.go files, such as "archive" (in $GOROOT/src).
 //
-// All I/O is via the build.Context virtual file system,
+// All I/O is done via the build.Context file system interface,
 // which must be concurrency-safe.
 //
 func AllPackages(ctxt *build.Context) []string {
@@ -45,37 +47,36 @@ func AllPackages(ctxt *build.Context) []string {
 // If the package directory exists but could not be read, the second
 // argument to the found function provides the error.
 //
-// The found function and the build.Context virtual file system
+// The found function and the build.Context file system interface
 // accessors must be concurrency safe.
 //
 func ForEachPackage(ctxt *build.Context, found func(importPath string, err error)) {
+	// We use a counting semaphore to limit
+	// the number of parallel calls to ReadDir.
+	sema := make(chan bool, 20)
+
 	var wg sync.WaitGroup
 	for _, root := range ctxt.SrcDirs() {
 		root := root
 		wg.Add(1)
 		go func() {
-			allPackages(ctxt, root, found)
+			allPackages(ctxt, sema, root, found)
 			wg.Done()
 		}()
 	}
 	wg.Wait()
 }
 
-func allPackages(ctxt *build.Context, root string, found func(string, error)) {
-	ReadDir := ctxt.ReadDir
-	if ReadDir == nil {
-		ReadDir = ioutil.ReadDir
-	}
-
+func allPackages(ctxt *build.Context, sema chan bool, root string, found func(string, error)) {
 	root = filepath.Clean(root) + string(os.PathSeparator)
 
 	var wg sync.WaitGroup
 
 	var walkDir func(dir string)
 	walkDir = func(dir string) {
-		// Prune search if we encounter any directory with these base names:
-		switch filepath.Base(dir) {
-		case "testdata", ".hg":
+		// Avoid .foo, _foo, and testdata directory trees.
+		base := filepath.Base(dir)
+		if base == "" || base[0] == '.' || base[0] == '_' || base == "testdata" {
 			return
 		}
 
@@ -87,7 +88,9 @@ func allPackages(ctxt *build.Context, root string, found func(string, error)) {
 			return
 		}
 
-		files, err := ReadDir(dir)
+		sema <- true
+		files, err := ReadDir(ctxt, dir)
+		<-sema
 		if pkg != "" || err != nil {
 			found(pkg, err)
 		}

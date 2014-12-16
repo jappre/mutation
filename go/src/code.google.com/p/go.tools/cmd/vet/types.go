@@ -10,7 +10,7 @@ import (
 	"go/ast"
 	"go/token"
 
-	"code.google.com/p/go.tools/go/types"
+	"golang.org/x/tools/go/types"
 )
 
 // imports is the canonical map of imported packages we need for typechecking.
@@ -20,9 +20,16 @@ var imports = make(map[string]*types.Package)
 var (
 	stringerMethodType = types.New("func() string")
 	errorType          = types.New("error").Underlying().(*types.Interface)
-	stringerType       = importType("fmt", "Stringer").Underlying().(*types.Interface)
-	formatterType      = importType("fmt", "Formatter").Underlying().(*types.Interface)
+	stringerType       = types.New("interface{ String() string }").(*types.Interface)
+	formatterType      *types.Interface
 )
+
+func init() {
+	typ := importType("fmt", "Formatter")
+	if typ != nil {
+		formatterType = typ.Underlying().(*types.Interface)
+	}
+}
 
 // importType returns the type denoted by the qualified identifier
 // path.name, and adds the respective package to the imports map
@@ -30,12 +37,14 @@ var (
 func importType(path, name string) types.Type {
 	pkg, err := types.DefaultImport(imports, path)
 	if err != nil {
-		panic("import failed: " + err.Error())
+		warnf("import failed: %v", err)
+		return nil
 	}
 	if obj, ok := pkg.Scope().Lookup(name).(*types.TypeName); ok {
 		return obj.Type()
 	}
-	panic("invalid type name: " + name)
+	warnf("invalid type name %q", name)
+	return nil
 }
 
 func (pkg *Package) check(fs *token.FileSet, astFiles []*ast.File) error {

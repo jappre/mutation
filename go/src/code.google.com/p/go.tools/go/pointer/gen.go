@@ -14,9 +14,9 @@ import (
 	"fmt"
 	"go/token"
 
-	"code.google.com/p/go.tools/go/callgraph"
-	"code.google.com/p/go.tools/go/ssa"
-	"code.google.com/p/go.tools/go/types"
+	"golang.org/x/tools/go/callgraph"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/types"
 )
 
 var (
@@ -525,7 +525,9 @@ func (a *analysis) genBuiltinCall(instr ssa.CallInstruction, cgn *cgnode) {
 	case "print":
 		// In the tests, the probe might be the sole reference
 		// to its arg, so make sure we create nodes for it.
-		a.valueNode(call.Args[0])
+		if len(call.Args) > 0 {
+			a.valueNode(call.Args[0])
+		}
 
 	case "ssa:wrapnilchk":
 		a.copy(a.valueNode(instr.Value()), a.valueNode(call.Args[0]), 1)
@@ -936,7 +938,8 @@ func (a *analysis) genInstr(cgn *cgnode, instr ssa.Instruction) {
 		case token.ARROW: // <-x
 			// We can ignore instr.CommaOk because the node we're
 			// altering is always at zero offset relative to instr
-			a.genLoad(cgn, a.valueNode(instr), instr.X, 0, a.sizeof(instr.Type()))
+			tElem := instr.X.Type().Underlying().(*types.Chan).Elem()
+			a.genLoad(cgn, a.valueNode(instr), instr.X, 0, a.sizeof(tElem))
 
 		case token.MUL: // *x
 			a.genLoad(cgn, a.valueNode(instr), instr.X, 0, a.sizeof(instr.Type()))

@@ -24,9 +24,9 @@ import (
 	"strconv"
 	"strings"
 
-	"code.google.com/p/go.tools/go/loader"
-	"code.google.com/p/go.tools/go/types"
-	"code.google.com/p/go.tools/go/types/typeutil"
+	"golang.org/x/tools/go/loader"
+	"golang.org/x/tools/go/types"
+	"golang.org/x/tools/go/types/typeutil"
 )
 
 // TODO(adonovan): audit to make sure it's safe on ill-typed packages.
@@ -230,9 +230,5 @@ func deref(typ types.Type) types.Type {
 
 // isPackageLevel reports whether obj is a package-level object.
 func isPackageLevel(obj types.Object) bool {
-	// TODO(adonovan): fix go/types bug:
-	//   obj.Parent().Parent() == obj.Pkg().Scope()
-	// doesn't work because obj.Parent() gets mutated during
-	// dot-imports.
 	return obj.Pkg().Scope().Lookup(obj.Name()) == obj
 }

@@ -12,8 +12,8 @@ import (
 	"testing"
 	"text/template"
 
-	"code.google.com/p/go.tools/godoc/vfs"
-	"code.google.com/p/go.tools/godoc/vfs/mapfs"
+	"golang.org/x/tools/godoc/vfs"
+	"golang.org/x/tools/godoc/vfs/mapfs"
 )
 
 // setupGoroot creates temporary directory to act as GOROOT when running tests
@@ -194,8 +194,19 @@ package main
 	fs.Bind("/", mfs, "/", vfs.BindReplace)
 	c := NewCorpus(fs)
 	p := &Presentation{Corpus: c}
-	p.cmdHandler = handlerServer{p, c, "/cmd/", "/src/cmd"}
-	p.pkgHandler = handlerServer{p, c, "/pkg/", "/src"}
+	p.cmdHandler = handlerServer{
+		p:       p,
+		c:       c,
+		pattern: "/cmd/",
+		fsRoot:  "/src/cmd",
+	}
+	p.pkgHandler = handlerServer{
+		p:       p,
+		c:       c,
+		pattern: "/pkg/",
+		fsRoot:  "/src",
+		exclude: []string{"/src/cmd"},
+	}
 	p.initFuncMap()
 	p.PackageText = template.Must(template.New("PackageText").Funcs(p.FuncMap()).Parse(`{{$info := .}}{{$filtered := .IsFiltered}}{{if $filtered}}{{range .PAst}}{{range .Decls}}{{node $info .}}{{end}}{{end}}{{else}}{{with .PAst}}{{range $filename, $ast := .}}{{$filename}}:
 {{node $ $ast}}{{end}}{{end}}{{end}}{{with .PDoc}}{{if $.IsMain}}COMMAND {{.Doc}}{{else}}PACKAGE {{.Doc}}{{end}}{{with .Funcs}}
