@@ -15,27 +15,26 @@ type User struct {
 	Tel        string
 }
 
+type Real_info struct {
+	Id        int
+	Real_name string
+	User      *User
+}
+
 func init() {
 	orm.RegisterModel(new(User))
+	orm.RegisterModel(new(Real_info))
 
 	orm.RegisterDataBase("default", "mysql", "root:tiger@tcp(localhost:3306)/user_center?charset=utf8", 30)
 }
 
 func main() {
 	o := orm.NewOrm()
+	// var real_infos []*Real_info
+	// qs := o.QueryTable("real_info")
+	// num, err := qs.Filter("User__Id", 7749471).All(&real_infos)
+	// fmt.Printf("num: %d\n, err: %v \n", 0, qs)
 
-	user := User{Email: "testforgo6@test123gezbox.com", Status: 1, Tel: "18668886667"}
-	id, err := o.Insert(&user)
-	fmt.Printf("ID: %d, ERR: %v \n", id, err)
-
-	user.Email = "testforgo7@test123gezbox.com"
-	num, err := o.Update(&user)
-	fmt.Printf("NUM: %d, ERR: %v\n", num, err)
-
-	u := User{Id: user.Id}
 	err = o.Read(&u)
 	fmt.Printf("ERR: %v\n, u= %v", err, u)
-
-	num, err = o.Delete(&u)
-	fmt.Printf("NUM: %d, ERR: %v\n", num, err)
 }
