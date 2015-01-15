@@ -6,6 +6,6 @@ import (
 )
 
 func init() {
-	beego.Router("/", &controllers.MainController{})
+	beego.Router("/", &controllers.MainController{}, "*:Get;post:ModifyEmail")
 	// beego.Router("/user/modify_email", &controllers.ModifyEmailController{})
 }
