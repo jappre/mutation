@@ -1,14 +1,17 @@
 package main
 
 import (
+	// "errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	// "strings"
 )
 
 func main() {
 	// GetFilesInPath("/Users/tiger/start.sh")
-	filepath.Walk("/Users/tiger/", walkFunc)
+	filepath.Walk("/Users/tiger/private/git-flow-cheatsheet", walkFunc)
 }
 
 //GetFilesInPath 用来获取某个路径下的所有文件或文件夹
@@ -34,9 +37,14 @@ func GetCommitSummary(path, user string) (insertion, deletion int) {
 	return insertion, deletion
 }
 
-func walkFunc(path string, info os.FileInfo, err error) error {
-	fmt.Printf("path is %s", path)
+func walkFunc(paths string, info os.FileInfo, err error) error {
+	fmt.Printf("path is %s", path.Base(paths))
 	fmt.Printf("\n")
 	fmt.Printf("info is %d", info.Mode())
+
+	// if strings.Contains(paths, ".git") {
+	// 	return errors.New("skip this directory")
+	// }
+
 	return nil
 }
