@@ -2,16 +2,24 @@ package main
 
 import (
 	// "errors"
+	"container/list"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
-	// "strings"
+	"strings"
 )
+
+var dirList = list.New()
 
 func main() {
 	// GetFilesInPath("/Users/tiger/start.sh")
-	filepath.Walk("/Users/tiger/private/git-flow-cheatsheet", walkFunc)
+	filepath.Walk("/Users/tiger/private/", walkFunc)
+
+	for it := dirList.Front(); it != nil; it = it.Next() {
+		fmt.Printf("PATH IS %s", it.Value)
+		fmt.Printf("\n")
+	}
 }
 
 //GetFilesInPath 用来获取某个路径下的所有文件或文件夹
@@ -38,13 +46,18 @@ func GetCommitSummary(path, user string) (insertion, deletion int) {
 }
 
 func walkFunc(paths string, info os.FileInfo, err error) error {
-	fmt.Printf("path is %s", path.Base(paths))
-	fmt.Printf("\n")
-	fmt.Printf("info is %d", info.Mode())
+	if strings.HasSuffix(path.Base(paths), ".git") && info.Mode() > 1420 {
+		fmt.Printf("path is %s", paths)
+		fmt.Printf("\n")
+		// return errors.New("skip this directory")
+		dirList.PushFront(paths)
+		return nil
+	}
 
-	// if strings.Contains(paths, ".git") {
-	// 	return errors.New("skip this directory")
-	// }
+	// fmt.Printf("path is %s", path.Base(paths))
+	// fmt.Printf("\n")
+	// fmt.Printf("info is %d", info.Mode())
+	// fmt.Printf("\n")
 
 	return nil
 }
