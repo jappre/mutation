@@ -1,16 +1,8 @@
-print 'Simple Assignment'
-shoplist = ['apple','mango','caroot','banana']
-mylist = shoplist
-
-del shoplist[0]
-
-print 'Shoplist is', shoplist
-print 'mylist is', mylist
-
-mylist = shoplist[:]
-del mylist[0]
-
-print 'Shoplist is', shoplist
-print 'mylist is', mylist
-
-
+sum = 0
+n = 0
+while n < 100:
+    n = n+1
+    sum = sum + n
+    # print(n)
+    # print(sum)
+print(sum)
