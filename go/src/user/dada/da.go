@@ -9,6 +9,7 @@ import (
 	// "time"
 )
 
+//main 主函数
 func main() {
 	for i := 0; i < 107020; i++ {
 		// time.Sleep(1 * time.Second)

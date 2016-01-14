@@ -3,29 +3,35 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+
 	// "log"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
+
+const LAT = 30.122561
+const LON = 120.082626
 
 //Courier 列表配送员结构体
 type Courier struct {
-	Name    string `json:"courierName"`
-	Tel     string `json:"courierTel"`
-	Company string `json:"companyName"`
-	Area    string `json:"workArea"`
+	GUID     string     `json:"guid"`
+	Name     string     `json:"courierName"`
+	Tel      string     `json:"courierTel"`
+	Company  string     `json:"companyName"`
+	Area     string     `json:"workArea"`
+	AreaList []LandMark `json:"landMarkList"`
 }
 
 //LandMark 地理坐标信息
 type LandMark struct {
+	GUID      string `json:"guid"`
 	Name      string `json:"name"`
 	XZQNumber string `json:"xzqNumber"`
-	XZQName   string `json:"xzqName"`
-	CoreName  string `json:"corename"`
-	City      string `json:"city"`
 }
 
 //CourierAround 列表结构体
@@ -35,22 +41,72 @@ type CourierAround struct {
 	Message  string    `json:"message"`
 }
 
+//CourierAround 列表结构体
+type CourierDetail struct {
+	Courier Courier `json:"courier"`
+	Message string  `json:"message"`
+}
+
 func main() {
 	//横纵双向遍历杭州地图, 步进0.01, 大约1公里范围
-	for latitude, s1, count := 30.122561, 0, 0; s1 < 25; latitude, s1 = latitude+0.01, s1+1 {
-		for longitude, s2 := 120.082626, 0; s2 < 30; longitude, s2 = longitude+0.01, s2+1 {
+	for latitude, s1, count := LAT, 0, 0; s1 < 2; latitude, s1 = latitude+0.01, s1+1 {
+		for longitude, s2 := LON, 0; s2 < 3; longitude, s2 = longitude+0.01, s2+1 {
 			count++
-			fmt.Printf("%3d,latitude = %f,", count, latitude)
-			fmt.Printf("longitude = %f\n", longitude)
-
+			// fmt.Printf("%3d,latitude = %f,", count, latitude)
+			// fmt.Printf("longitude = %f\n", longitude)
+			courierAround := GetAround(latitude, longitude)
+			time.Sleep(time.Second * 10)
+			for i := 0; i < len(courierAround.Colist); i++ {
+				courier := GetDetail(latitude, longitude, courierAround.Colist[i].GUID)
+				time.Sleep(time.Second * 10)
+			}
 		}
 	}
+}
 
-	urlofKuaidi := "http://j.kuaidi100.com/searchapi.do"
+// makeJsonKeyValue 获得json的参数
+func makeJsonKeyValue(latitude, longitude float64) string {
+	return "{longitude:" + strconv.FormatFloat(longitude, 'G', -1, 32) + ",latitude:" + strconv.FormatFloat(latitude, 'G', -1, 32) + "}"
+}
+
+// makeJsonGuidKeyValue 获得json的参数
+func makeJsonGuidKeyValue(latitude, longitude float64, guid string) string {
+	return "{\"guid\":\"" + guid + "\",longitude:" + strconv.FormatFloat(longitude, 'G', -1, 32) + ",latitude:" + strconv.FormatFloat(latitude, 'G', -1, 32) + "}"
+}
+
+//GetAround 获取周边列表
+func GetAround(latitude, longitude float64) CourierAround {
+	keyVal := url.Values{}
+	keyVal.Set("json", makeJsonKeyValue(latitude, longitude))
+	keyVal.Add("method", "courieraround")
+	data := GetKuaidiData(keyVal)
+
+	var courierAround CourierAround
+	json.Unmarshal(data, &courierAround)
+	fmt.Printf("在%s附近, 有%d个快递员", courierAround.LandMark.Name, len(courierAround.Colist))
+	fmt.Printf("\n")
+	return courierAround
+}
+
+//GetDetail 获取详情
+func GetDetail(latitude, longitude float64, guid string) (Courier, error) {
 
 	keyVal := url.Values{}
-	keyVal.Set("json", "{longitude:120.2099324782554,latitude:30.20681568480997}")
-	keyVal.Add("method", "courieraround")
+	keyVal.Set("json", makeJsonGuidKeyValue(latitude, longitude, guid))
+	keyVal.Add("method", "courierdetail")
+	data := GetKuaidiData(keyVal)
+	// fmt.Println(string(data))
+
+	var courierDetail CourierDetail
+	json.Unmarshal(data, &courierDetail)
+	fmt.Printf("快递员名字是%s, 电话是%s", courierDetail.Courier.Name, courierDetail.Courier.Tel)
+
+	return courierDetail.Courier, nil
+}
+
+// GetKuaidiData 获取快递100的数据, 需要传入参数
+func GetKuaidiData(keyVal url.Values) (data []byte) {
+	urlofKuaidi := "http://j.kuaidi100.com/searchapi.do"
 
 	body := ioutil.NopCloser(strings.NewReader(keyVal.Encode())) //把form数据编下码
 	client := &http.Client{}
@@ -65,15 +121,17 @@ func main() {
 	resp, _ := client.Do(req)
 	//一定要关闭resp.Body
 	defer resp.Body.Close()
-	data, _ := ioutil.ReadAll(resp.Body)
+	respData, _ := ioutil.ReadAll(resp.Body)
 	// fmt.Println(string(data))
-
-	var courierList CourierAround
-	err := json.Unmarshal(data, &courierList)
-	fmt.Println(courierList.Colist[1].Name, err)
-
+	return respData
 }
 
+//SaveDataToFile 将string存入文件
 func SaveDataToFile(fileName string, data []byte) {
 	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
+	if err != nil {
+		panic(err)
+		return
+	}
+	f.WriteString(string(data))
 }
