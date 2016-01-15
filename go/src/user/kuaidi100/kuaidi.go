@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"gopkg.in/fatih/set.v0"
+
 	// "log"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,8 +17,13 @@ import (
 	"time"
 )
 
-const LAT = 30.122561
-const LON = 120.082626
+//全杭州 终点 120.395050,30.354519
+// const LAT = 30.122561
+// const LON = 120.082626
+
+//主要城区 终点120.207974,30.338176
+const LAT = 30.253608
+const LON = 120.060795
 
 //Courier 列表配送员结构体
 type Courier struct {
@@ -47,18 +55,30 @@ type CourierDetail struct {
 	Message string  `json:"message"`
 }
 
+var s = set.New()
+
 func main() {
 	//横纵双向遍历杭州地图, 步进0.01, 大约1公里范围
-	for latitude, s1, count := LAT, 0, 0; s1 < 2; latitude, s1 = latitude+0.01, s1+1 {
-		for longitude, s2 := LON, 0; s2 < 3; longitude, s2 = longitude+0.01, s2+1 {
+	for latitude, s1, count := LAT, 0, 0; s1 < 4; latitude, s1 = latitude+0.02, s1+1 {
+		for longitude, s2 := LON, 0; s2 < 7; longitude, s2 = longitude+0.02, s2+1 {
 			count++
-			// fmt.Printf("%3d,latitude = %f,", count, latitude)
+			fmt.Printf("count = %3d", count)
 			// fmt.Printf("longitude = %f\n", longitude)
 			courierAround := GetAround(latitude, longitude)
 			time.Sleep(time.Second * 10)
 			for i := 0; i < len(courierAround.Colist); i++ {
-				courier := GetDetail(latitude, longitude, courierAround.Colist[i].GUID)
+				courier, err := GetDetail(latitude, longitude, courierAround.Colist[i].GUID)
+				if err != nil {
+					fmt.Println("continue\n")
+					continue
+				}
 				time.Sleep(time.Second * 10)
+				if len(courier.AreaList) > 0 {
+					SaveDataToFile("courier.txt", courier.Name+","+courier.Tel+","+courier.Company+","+courier.AreaList[0].Name+"\n")
+				} else {
+					SaveDataToFile("courier.txt", courier.Name+","+courier.Tel+","+courier.Company+","+"\n")
+				}
+
 			}
 		}
 	}
@@ -90,7 +110,11 @@ func GetAround(latitude, longitude float64) CourierAround {
 
 //GetDetail 获取详情
 func GetDetail(latitude, longitude float64, guid string) (Courier, error) {
-
+	if !s.Has(guid) {
+		s.Add(guid)
+	} else {
+		return Courier{}, errors.New("already have")
+	}
 	keyVal := url.Values{}
 	keyVal.Set("json", makeJsonGuidKeyValue(latitude, longitude, guid))
 	keyVal.Add("method", "courierdetail")
@@ -100,7 +124,7 @@ func GetDetail(latitude, longitude float64, guid string) (Courier, error) {
 	var courierDetail CourierDetail
 	json.Unmarshal(data, &courierDetail)
 	fmt.Printf("快递员名字是%s, 电话是%s", courierDetail.Courier.Name, courierDetail.Courier.Tel)
-
+	fmt.Printf("\n")
 	return courierDetail.Courier, nil
 }
 
@@ -127,11 +151,11 @@ func GetKuaidiData(keyVal url.Values) (data []byte) {
 }
 
 //SaveDataToFile 将string存入文件
-func SaveDataToFile(fileName string, data []byte) {
+func SaveDataToFile(fileName string, data string) {
 	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		panic(err)
 		return
 	}
-	f.WriteString(string(data))
+	f.WriteString(data)
 }
