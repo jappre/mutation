@@ -62,17 +62,17 @@ func main() {
 	for latitude, s1, count := LAT, 0, 0; s1 < 4; latitude, s1 = latitude+0.02, s1+1 {
 		for longitude, s2 := LON, 0; s2 < 7; longitude, s2 = longitude+0.02, s2+1 {
 			count++
-			fmt.Printf("count = %3d", count)
+			fmt.Printf("count = %3d\n", count)
 			// fmt.Printf("longitude = %f\n", longitude)
 			courierAround := GetAround(latitude, longitude)
-			time.Sleep(time.Second * 10)
+			// time.Sleep(time.Second * 10)
 			for i := 0; i < len(courierAround.Colist); i++ {
 				courier, err := GetDetail(latitude, longitude, courierAround.Colist[i].GUID)
 				if err != nil {
 					fmt.Println("continue\n")
 					continue
 				}
-				time.Sleep(time.Second * 10)
+				time.Sleep(time.Second * 2)
 				if len(courier.AreaList) > 0 {
 					SaveDataToFile("courier.txt", courier.Name+","+courier.Tel+","+courier.Company+","+courier.AreaList[0].Name+"\n")
 				} else {
@@ -129,7 +129,7 @@ func GetDetail(latitude, longitude float64, guid string) (Courier, error) {
 }
 
 // GetKuaidiData 获取快递100的数据, 需要传入参数
-func GetKuaidiData(keyVal url.Values) (data []byte) {
+func GetKuaidiData(keyVal url.Values) []byte {
 	urlofKuaidi := "http://j.kuaidi100.com/searchapi.do"
 
 	body := ioutil.NopCloser(strings.NewReader(keyVal.Encode())) //把form数据编下码
@@ -139,11 +139,13 @@ func GetKuaidiData(keyVal url.Values) (data []byte) {
 	//这个一定要加，不加form的值post不过去，被坑了两小时
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
 	//看下发送的结构
-	//fmt.Printf("%+v\n\n\n\n", req)
+	// fmt.Printf("req = %+v\n\n\n\n", req)
 
 	//发送
 	resp, _ := client.Do(req)
+	// fmt.Println("resp = ", resp)
 	//一定要关闭resp.Body
+	fmt.Printf("%p, %T", resp, resp)
 	defer resp.Body.Close()
 	respData, _ := ioutil.ReadAll(resp.Body)
 	// fmt.Println(string(data))
