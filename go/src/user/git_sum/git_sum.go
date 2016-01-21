@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"user/git_sum/go_shell"
 )
 
 var dirList = list.New()
@@ -20,6 +21,7 @@ func main() {
 		fmt.Printf("PATH IS %s", it.Value)
 		fmt.Printf("\n")
 	}
+	goshell.GetCommandMessage("cd ~;ls")
 }
 
 //GetFilesInPath 用来获取某个路径下的所有文件或文件夹
