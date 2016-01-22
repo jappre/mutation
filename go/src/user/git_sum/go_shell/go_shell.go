@@ -25,6 +25,7 @@ func run() {
 
 // GetCommandMessage 用来获取命令行输出的任何内容
 func GetCommandMessage(command string) (message string, err error) {
+	fmt.Println(command)
 	cmd := exec.Command("/bin/sh", "-c", command)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -65,6 +66,6 @@ func GetCommandMessage(command string) (message string, err error) {
 		return err.Error(), err
 	}
 
-	fmt.Printf("stdout: %s", bytes)
+	// fmt.Printf("stdout: %s", bytes)
 	return string(bytes), nil
 }

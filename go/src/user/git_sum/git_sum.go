@@ -3,25 +3,30 @@ package main
 import (
 	// "errors"
 	"container/list"
+	"crypto/md5"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"user/git_sum/go_shell"
+
+	"gopkg.in/fatih/set.v0"
 )
 
 var dirList = list.New()
+var s = set.New()
 
 func main() {
 	// GetFilesInPath("/Users/tiger/start.sh")
-	filepath.Walk("/Users/tiger/private/", walkFunc)
+	filepath.Walk("/Users/tiger/Company/MrWind/server/new/Dispatcher", walkFunc)
 
 	for it := dirList.Front(); it != nil; it = it.Next() {
-		fmt.Printf("PATH IS %s", it.Value)
+		fmt.Printf("PATH IS %s", fmt.Sprint(it.Value))
 		fmt.Printf("\n")
+		fmt.Println(GetCommitGuy(fmt.Sprint(it.Value)))
 	}
-	goshell.GetCommandMessage("cd ~;ls")
+
 }
 
 //GetFilesInPath 用来获取某个路径下的所有文件或文件夹
@@ -49,10 +54,11 @@ func GetCommitSummary(path, user string) (insertion, deletion int) {
 
 func walkFunc(paths string, info os.FileInfo, err error) error {
 	if strings.HasSuffix(path.Base(paths), ".git") && info.Mode() > 1420 {
-		fmt.Printf("path is %s", paths)
-		fmt.Printf("\n")
 		// return errors.New("skip this directory")
-		dirList.PushFront(paths)
+		if !s.Has(md5.Sum([]byte(paths))) {
+			s.Add(md5.Sum([]byte(paths)))
+			dirList.PushFront(strings.TrimSuffix(paths, ".git"))
+		}
 		return nil
 	}
 
@@ -62,4 +68,17 @@ func walkFunc(paths string, info os.FileInfo, err error) error {
 	// fmt.Printf("\n")
 
 	return nil
+}
+
+//GetCommitGuy 用来提取commit的人员名单列表
+func GetCommitGuy(path string) []string {
+	guyList, _ := goshell.GetCommandMessage(gitLogCommand(path))
+	fmt.Println(guyList)
+	return nil
+}
+
+//GitLogCommand 用来返回获取commit log的具体命令
+func gitLogCommand(path string) string {
+	// git log | grep @123feng.com | uniq -d -i | sort
+	return "cd " + path + "; git log | grep Author: | uniq -d -i | sort"
 }
