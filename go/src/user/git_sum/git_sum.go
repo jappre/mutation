@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"user/git_sum/go_shell"
 
@@ -15,7 +16,7 @@ import (
 )
 
 var dirList = list.New()
-var s = set.New()
+var pathSet = set.New()
 
 func main() {
 	// GetFilesInPath("/Users/tiger/start.sh")
@@ -55,8 +56,8 @@ func GetCommitSummary(path, user string) (insertion, deletion int) {
 func walkFunc(paths string, info os.FileInfo, err error) error {
 	if strings.HasSuffix(path.Base(paths), ".git") && info.Mode() > 1420 {
 		// return errors.New("skip this directory")
-		if !s.Has(md5.Sum([]byte(paths))) {
-			s.Add(md5.Sum([]byte(paths)))
+		if !pathSet.Has(md5.Sum([]byte(paths))) {
+			pathSet.Add(md5.Sum([]byte(paths)))
 			dirList.PushFront(strings.TrimSuffix(paths, ".git"))
 		}
 		return nil
@@ -70,11 +71,20 @@ func walkFunc(paths string, info os.FileInfo, err error) error {
 	return nil
 }
 
+// Author: ws <王松@123feng.com>
 //GetCommitGuy 用来提取commit的人员名单列表
-func GetCommitGuy(path string) []string {
+func GetCommitGuy(path string) *set.Set {
+	var authorSet = set.New()
 	guyList, _ := goshell.GetCommandMessage(gitLogCommand(path))
-	fmt.Println(guyList)
-	return nil
+	reg := regexp.MustCompile(`(?U)<.+>`)
+	authorlist := reg.FindAllString(guyList, -1)
+	for i := range authorlist {
+		authorSet.Add(authorlist[i])
+	}
+	// for it := authorSet.Pop(); it != nil; it = authorSet.Pop() {
+	// 	fmt.Println(it.(string))
+	// }
+	return authorSet
 }
 
 //GitLogCommand 用来返回获取commit log的具体命令
