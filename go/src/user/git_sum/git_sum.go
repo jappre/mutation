@@ -73,7 +73,7 @@ func walkFunc(paths string, info os.FileInfo, err error) error {
 
 // Author: ws <王松@123feng.com>
 //GetCommitGuy 用来提取commit的人员名单列表
-func GetCommitGuy(path string) *set.Set {
+func GetCommitGuy(path string) set.Set {
 	var authorSet = set.New()
 	guyList, _ := goshell.GetCommandMessage(gitLogCommand(path))
 	reg := regexp.MustCompile(`(?U)<.+>`)
