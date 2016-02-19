@@ -1,7 +1,9 @@
 package goshell
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os/exec"
 	// "time"
@@ -26,7 +28,7 @@ func run() {
 // GetCommandMessage 用来获取命令行输出的任何内容
 func GetCommandMessage(command string) (message string, err error) {
 	fmt.Println(command)
-	cmd := exec.Command("/bin/sh", "-c", command)
+	cmd := exec.Command("/bin/zsh", "-c", command)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		fmt.Println("StdoutPipe: " + err.Error())
@@ -43,8 +45,8 @@ func GetCommandMessage(command string) (message string, err error) {
 		fmt.Println("Start: ", err.Error())
 		return err.Error(), err
 	}
-
-	bytesErr, err := ioutil.ReadAll(stderr)
+	// fmt.Printf("%p", *stderr)
+	bytesErr, err := readAll(stderr, 1024)
 	if err != nil {
 		fmt.Println("ReadAll stderr: ", err.Error())
 		return err.Error(), err
@@ -68,4 +70,24 @@ func GetCommandMessage(command string) (message string, err error) {
 
 	// fmt.Printf("stdout: %s", bytes)
 	return string(bytes), nil
+}
+
+func readAll(r io.Reader, capacity int64) (b []byte, err error) {
+	buf := bytes.NewBuffer(make([]byte, 0, capacity))
+	// If the buffer overflows, we will get bytes.ErrTooLarge.
+	// Return that as an error. Any other panic remains.
+	defer func() {
+		e := recover()
+		if e == nil {
+			return
+		}
+		if panicErr, ok := e.(error); ok && panicErr == bytes.ErrTooLarge {
+			err = panicErr
+		} else {
+			panic(e)
+		}
+	}()
+	// fmt.Println(len(buf))
+	_, err = buf.ReadFrom(r)
+	return buf.Bytes(), err
 }

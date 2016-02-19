@@ -10,10 +10,24 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 	"user/git_sum/go_shell"
 
 	"gopkg.in/fatih/set.v0"
 )
+
+type Person struct {
+	Name  string
+	Email string
+}
+
+type Commit struct {
+	Person      Person
+	Date        time.Time
+	FileChanged int16
+	Insertions  int16
+	Delettions  int16
+}
 
 var dirList = list.New()
 var pathSet = set.New()
@@ -25,7 +39,7 @@ func main() {
 	for it := dirList.Front(); it != nil; it = it.Next() {
 		fmt.Printf("PATH IS %s", fmt.Sprint(it.Value))
 		fmt.Printf("\n")
-		fmt.Println(GetCommitGuy(fmt.Sprint(it.Value)))
+		fmt.Printf("%v", GetCommit(fmt.Sprint(it.Value)))
 	}
 
 }
@@ -72,12 +86,13 @@ func walkFunc(paths string, info os.FileInfo, err error) error {
 }
 
 // Author: ws <王松@123feng.com>
-//GetCommitGuy 用来提取commit的人员名单列表
-func GetCommitGuy(path string) set.Set {
+//GetCommit 用来提取commit list
+func GetCommit(path string) *set.Set {
 	var authorSet = set.New()
-	guyList, _ := goshell.GetCommandMessage(gitLogCommand(path))
-	reg := regexp.MustCompile(`(?U)<.+>`)
-	authorlist := reg.FindAllString(guyList, -1)
+	commitList, _ := goshell.GetCommandMessage(gitLogCommand(path))
+	reg := regexp.MustCompile(`(?U)Pm.+Pm`)
+	// reg := regexp.MustCompile(`(?U)<.+>`)
+	authorlist := reg.FindAllString(commitList, -1)
 	for i := range authorlist {
 		authorSet.Add(authorlist[i])
 	}
@@ -90,5 +105,8 @@ func GetCommitGuy(path string) set.Set {
 //GitLogCommand 用来返回获取commit log的具体命令
 func gitLogCommand(path string) string {
 	// git log | grep @123feng.com | uniq -d -i | sort
-	return "cd " + path + "; git log | grep Author: | uniq -d -i | sort"
+	// return "cd " + path + "; git log | grep Author: | uniq -d -i | sort"
+	// return "cd " + path + "; git log --shortstat --since='2016-01-01' --no-merges  --pretty=format:'Author:%an,Email:%ae,date:%aI'"
+	return "cd " + path + "; git log --shortstat --no-merges  --since='2016-01-01' --pretty=format:\"PmPmAuthor:%an,Email:%ae,Date:%aI,Change:\" | sed 'H;$!d;g;s/\\n//g' >.tmp.count ; cat .tmp.count"
+
 }
