@@ -22,8 +22,10 @@ type Person struct {
 }
 
 type Commit struct {
-	Person      Person
+	Name        string
+	Email       string
 	Date        time.Time
+	Change      string
 	FileChanged int16
 	Insertions  int16
 	Delettions  int16
@@ -90,7 +92,7 @@ func walkFunc(paths string, info os.FileInfo, err error) error {
 func GetCommit(path string) *set.Set {
 	var authorSet = set.New()
 	commitList, _ := goshell.GetCommandMessage(gitLogCommand(path))
-	reg := regexp.MustCompile(`(?U)Pm.+Pm`)
+	reg := regexp.MustCompile(`(?U){.+}`)
 	// reg := regexp.MustCompile(`(?U)<.+>`)
 	authorlist := reg.FindAllString(commitList, -1)
 	for i := range authorlist {
@@ -103,10 +105,18 @@ func GetCommit(path string) *set.Set {
 }
 
 //GitLogCommand 用来返回获取commit log的具体命令
+//"person" : {
+//     "name" : "Ale",
+//     "email" : "+55 53 8116 9639"
+// },
+// "date" : ISODate("2016-01-27T16:33:16.499+0800"),
+// "filechanged" : 2,
+// "insertions" : 3,
+// "delettions" : 6
 func gitLogCommand(path string) string {
 	// git log | grep @123feng.com | uniq -d -i | sort
 	// return "cd " + path + "; git log | grep Author: | uniq -d -i | sort"
 	// return "cd " + path + "; git log --shortstat --since='2016-01-01' --no-merges  --pretty=format:'Author:%an,Email:%ae,date:%aI'"
-	return "cd " + path + "; git log --shortstat --no-merges  --since='2016-01-01' --pretty=format:\"PmPmAuthor:%an,Email:%ae,Date:%aI,Change:\" | sed 'H;$!d;g;s/\\n//g' >.tmp.count ; cat .tmp.count"
+	return "cd " + path + "; git log --shortstat --no-merges  --since='2016-01-10' --pretty=format:\"\\\"}{\\\"Name\\\":\\\"%an\\\",\\\"Email\\\":\\\"%ae\\\",\\\"Date\\\":\\\"%aI\\\",\\\"Change\\\":\\\"\" | sed 'H;$!d;g;s/\\n//g' >.tmp.count ; echo \"\\\"}\">>.tmp.count; echo {\\\";cat .tmp.count"
 
 }
