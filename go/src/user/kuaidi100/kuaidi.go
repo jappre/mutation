@@ -119,7 +119,7 @@ func GetDetail(latitude, longitude float64, guid string) (Courier, error) {
 	keyVal.Set("json", makeJsonGuidKeyValue(latitude, longitude, guid))
 	keyVal.Add("method", "courierdetail")
 	data := GetKuaidiData(keyVal)
-	fmt.Println(string(data))
+	// fmt.Println(string(data))
 
 	var courierDetail CourierDetail
 	json.Unmarshal(data, &courierDetail)
