@@ -4,7 +4,9 @@ import (
 	// "errors"
 	"container/list"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,12 +16,8 @@ import (
 	"user/git_sum/go_shell"
 
 	"gopkg.in/fatih/set.v0"
+	"gopkg.in/mgo.v2"
 )
-
-type Person struct {
-	Name  string
-	Email string
-}
 
 type Commit struct {
 	Name        string
@@ -36,14 +34,47 @@ var pathSet = set.New()
 
 func main() {
 	// GetFilesInPath("/Users/tiger/start.sh")
-	filepath.Walk("/Users/tiger/Company/MrWind/server/new/Dispatcher", walkFunc)
+	filepath.Walk("/Users/tiger/Company/MrWind/", walkFunc)
 
 	for it := dirList.Front(); it != nil; it = it.Next() {
-		fmt.Printf("PATH IS %s", fmt.Sprint(it.Value))
-		fmt.Printf("\n")
-		fmt.Printf("%v", GetCommit(fmt.Sprint(it.Value)))
+		// fmt.Printf("PATH IS %s", fmt.Sprint(it.Value))
+		// fmt.Printf("\n")
+		// fmt.Printf("%v", GetCommit(fmt.Sprint(it.Value)))
+
+		commitSet := GetCommit(fmt.Sprint(it.Value))
+		for coit := commitSet.Pop(); coit != nil; coit = commitSet.Pop() {
+			var commit Commit
+			json.Unmarshal([]byte(coit.(string)), &commit)
+			// fmt.Printf("%v", commit)
+			// fmt.Printf("\n")
+			storeInMongo(commit, getProjectName(it.Value.(string)))
+		}
+
 	}
 
+}
+
+func getProjectName(path string) string {
+	folderNames := strings.Split(path, "/")
+	return folderNames[len(folderNames)-2]
+}
+
+func storeInMongo(commit Commit, project string) {
+	fmt.Println(project)
+	fmt.Println(commit)
+	session, err := mgo.Dial("localhost")
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+	// Optional. Switch the session to a monotonic behavior.
+	session.SetMode(mgo.Monotonic, true)
+
+	c := session.DB(project).C("Commit")
+	err = c.Insert(commit)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 //GetFilesInPath 用来获取某个路径下的所有文件或文件夹
@@ -105,18 +136,10 @@ func GetCommit(path string) *set.Set {
 }
 
 //GitLogCommand 用来返回获取commit log的具体命令
-//"person" : {
-//     "name" : "Ale",
-//     "email" : "+55 53 8116 9639"
-// },
-// "date" : ISODate("2016-01-27T16:33:16.499+0800"),
-// "filechanged" : 2,
-// "insertions" : 3,
-// "delettions" : 6
 func gitLogCommand(path string) string {
 	// git log | grep @123feng.com | uniq -d -i | sort
 	// return "cd " + path + "; git log | grep Author: | uniq -d -i | sort"
 	// return "cd " + path + "; git log --shortstat --since='2016-01-01' --no-merges  --pretty=format:'Author:%an,Email:%ae,date:%aI'"
-	return "cd " + path + "; git log --shortstat --no-merges  --since='2016-01-10' --pretty=format:\"\\\"}{\\\"Name\\\":\\\"%an\\\",\\\"Email\\\":\\\"%ae\\\",\\\"Date\\\":\\\"%aI\\\",\\\"Change\\\":\\\"\" | sed 'H;$!d;g;s/\\n//g' >.tmp.count ; echo \"\\\"}\">>.tmp.count; echo {\\\";cat .tmp.count"
+	return "cd " + path + "; git log --shortstat --no-merges  --since='2016-01-15' --pretty=format:\"\\\"}{\\\"Name\\\":\\\"%an\\\",\\\"Email\\\":\\\"%ae\\\",\\\"Date\\\":\\\"%aI\\\",\\\"Change\\\":\\\"\" | sed 'H;$!d;g;s/\\n//g' >.tmp.count ; echo \"\\\"}\">>.tmp.count; echo {\\\";cat .tmp.count"
 
 }
