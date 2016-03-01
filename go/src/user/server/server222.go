@@ -4,17 +4,17 @@ import "github.com/go-martini/martini"
 
 func main() {
 	m := martini.Classic()
-	m.Get("/hello", func() string {
-		return "Hello, World!"
+	m.Get("/hello/(?P<name>[a-zA-Z]+)", func(params martini.Params) string {
+		return "Helloddd, " + params["name"]
 	})
 	m.Patch("/", func() string {
 		// update something
 		return "Hello, Patch!"
 	})
 
-	m.Post("/", func() string {
+	m.Post("/", func() (int, string) {
 		// create something
-		return "Hello, Post!"
+		return 418, "Hello, Post!"
 	})
 
 	m.Put("/", func() string {
