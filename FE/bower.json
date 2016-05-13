@@ -1,0 +1,21 @@
+{
+  "name": "test",
+  "description": "这是一个描述文件for project test",
+  "main": "index.js",
+  "authors": [
+    "Jappre"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "testkey"
+  ],
+  "homepage": "https://github.com/jappre/mutation",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
