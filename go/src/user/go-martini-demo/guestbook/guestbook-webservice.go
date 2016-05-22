@@ -101,7 +101,7 @@ func (g *GuestBook) WebPost(params martini.Params,
 	req *http.Request) (int, string) {
 	// Make sure Body is closed when we are done.
 	defer req.Body.Close()
-
+	panic("ddd")
 	// Read request body.
 	requestBody, err := ioutil.ReadAll(req.Body)
 	if err != nil {

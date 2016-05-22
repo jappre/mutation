@@ -1,21 +1,29 @@
 {
-  "name": "test",
-  "description": "这是一个描述文件for project test",
-  "main": "index.js",
+  "name": "whhblog",
+  "version": "1.0.0",
   "authors": [
-    "Jappre"
+    "wuhuihao <wuhuihao@qq.com>"
   ],
-  "license": "ISC",
+  "description": "my blog",
+  "main": "index.html",
+  "moduleType": [
+    "amd"
+  ],
   "keywords": [
-    "testkey"
+    "blog"
   ],
-  "homepage": "https://github.com/jappre/mutation",
-  "moduleType": [],
+  "license": "MIT",
+  "private": true,
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "susy": "~2.2.5",
+    "normalize.css": "~3.0.3",
+    "breakpoint-sass": "~2.4.0"
+  }
 }
